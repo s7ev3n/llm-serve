@@ -8,3 +8,5 @@ accelerate
 llmspec
 falcon
 uvicorn
+tensor_parallel==2.0.0
+flash-attn==2.3.6

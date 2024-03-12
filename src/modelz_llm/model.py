@@ -2,6 +2,7 @@ import gc
 from typing import Iterable, List, Union
 
 import torch
+import tensor_parallel as tp
 import transformers
 from llmspec import (
     ChatCompletionRequest,
@@ -23,7 +24,7 @@ CONTEXT_LEN = 2048
 
 
 class LLM:
-    def __init__(self, model_name: str, device: str) -> None:
+    def __init__(self, model_name: str, device: str, context_length: int) -> None:
         self.model_name = model_name
         self.model_spec = LanguageModels.find(model_name).value
         tokenizer_cls = getattr(transformers, self.model_spec.tokenizer_cls)
@@ -45,6 +46,7 @@ class LLM:
             model_name,
             trust_remote_code=True,
             low_cpu_mem_usage=self.model_spec.low_cpu_mem_usage,
+            use_flash_attention_2="flash_attention_2",
         )
         if device == "auto":
             self.device = (
@@ -61,7 +63,9 @@ class LLM:
         except Exception as err:
             logger.debug("failed to convert the model: %s", err)
 
-        self.model = self.model.to(self.device)
+        self.context_length = context_length
+        # self.model = self.model.to(self.device)
+        self.model = tp.tensor_parallel(self.model)
         self.model.eval()
 
     def __str__(self) -> str:
@@ -151,7 +155,8 @@ class LLM:
         )
         # encoding
         if is_encoder_decoder:
-            max_src_len = CONTEXT_LEN
+            # max_src_len = CONTEXT_LEN
+            max_src_len = self.context_length
             input_ids = input_ids[-max_src_len:]
             encoder_output = self.model.encoder(
                 input_ids=torch.as_tensor(input_ids, device=self.device)
@@ -162,7 +167,8 @@ class LLM:
                 device=self.device,
             )
         else:
-            max_src_len = CONTEXT_LEN - req.max_tokens - 8
+            # max_src_len = CONTEXT_LEN - req.max_tokens - 8
+            max_src_len = self.context_length - req.max_tokens - 8
 
         past_key_values = out = token = None
         for i in range(req.max_tokens):

@@ -22,6 +22,8 @@ gpu = [
     "sentencepiece",
     "accelerate",
     "cpm_kernels",
+    "tensor_parallel==2.0.0",
+    "flash-attn==2.3.6"
 ]
 [project.urls]
 "Homepage" = "https://github.com/tensorchord/modelz-llm"

@@ -116,7 +116,7 @@ def build_falcon_app(args: argparse.Namespace):
     emb_uds_path = UNIX_DOMAIN_SOCKET_PATH.format("emb")
     barrier = mp.get_context("spawn").Barrier(3)
     model_proc = run_server(
-        llm_uds_path, barrier, LLM, model_name=args.model, device=args.device
+        llm_uds_path, barrier, LLM, model_name=args.model, device=args.device, context_length=args.ctxlen
     )
     emb_proc = run_server(
         emb_uds_path, barrier, Emb, model_name=args.emb_model, device=args.device
