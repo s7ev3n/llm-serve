@@ -41,7 +41,9 @@ def parse_argument():
     parser.add_argument(
         "-ctxlen",
         "--context_length",
-        "model context length, larger context length require larger memory",
+        default=1024,
+        type=int,
+        help="model context length, larger context length require larger memory",
     )
     parser.add_argument(
         "--port",

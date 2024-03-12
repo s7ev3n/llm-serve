@@ -47,6 +47,7 @@ class LLM:
             trust_remote_code=True,
             low_cpu_mem_usage=self.model_spec.low_cpu_mem_usage,
             use_flash_attention_2="flash_attention_2",
+            torch_dtype=torch.bfloat16
         )
         if device == "auto":
             self.device = (
@@ -64,8 +65,8 @@ class LLM:
             logger.debug("failed to convert the model: %s", err)
 
         self.context_length = context_length
-        # self.model = self.model.to(self.device)
-        self.model = tp.tensor_parallel(self.model)
+        self.model = self.model.to(self.device)
+        # self.model = tp.tensor_parallel(self.model)
         self.model.eval()
 
     def __str__(self) -> str:
